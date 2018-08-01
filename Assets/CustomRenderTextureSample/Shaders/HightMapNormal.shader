@@ -47,7 +47,7 @@
                 float3 texz = tex2Dlod(_ParallaxMap, float4(v.uv.xy - shiftZ, 0, 0)) * 2.0 - 1;
 
                 float3 du = float3(1, 0, (texX.x - texx.x));
-                float3 dv = float3(1, 0, (texZ.x - texz.x));
+                float3 dv = float3(0, 1, (texZ.x - texz.x));
 
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
