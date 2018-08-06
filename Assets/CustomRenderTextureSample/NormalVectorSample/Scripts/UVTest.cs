@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class UVTest : MonoBehaviour
 {
-    private Vector3 _lastHit;
-
-    private const float TOLERANCE = 1E-2f;
+    private Vector3? _lastHit = null;
+    private List<Vector3> _verts = new List<Vector3>();
 
     private void CheckUV()
     {
@@ -18,7 +17,11 @@ public class UVTest : MonoBehaviour
             return;
         }
 
-        _lastHit = hit.point;
+        _verts.Clear();
+        _lastHit = null;
+
+        Vector3 p = hit.transform.InverseTransformPoint(hit.point);
+        _lastHit = p;
 
         MeshFilter filter = hit.transform.GetComponent<MeshFilter>();
         Mesh mesh = filter.sharedMesh;
@@ -33,35 +36,19 @@ public class UVTest : MonoBehaviour
             Vector3 p1 = mesh.vertices[mesh.triangles[idx0]];
             Vector3 p2 = mesh.vertices[mesh.triangles[idx1]];
             Vector3 p3 = mesh.vertices[mesh.triangles[idx2]];
-            Vector3 p = hit.transform.InverseTransformPoint(hit.point);
 
-            Vector3 v1 = p2 - p1;
-            Vector3 v2 = p3 - p1;
-            Vector3 vp = p - p1;
-
-            Vector3 nv = Vector3.Cross(v1, v2);
-            float val = Vector3.Dot(nv.normalized, vp.normalized);
-
-            bool suc;
-
-            suc = -TOLERANCE < val && val < TOLERANCE;
-            if (!suc)
+            if (!Math.PointOnPlane(p, p1, p2, p3))
             {
                 continue;
             }
             #endregion 1. ある点Pがポリゴン平面に存在するか
 
             #region 2. 同一平面上に存在する点Pが三角形内部に存在するか
-            Vector3 a = Vector3.Cross(p1 - p3, p - p1).normalized;
-            Vector3 b = Vector3.Cross(p2 - p1, p - p2).normalized;
-            Vector3 c = Vector3.Cross(p3 - p2, p - p3).normalized;
+            _verts.Add(p1);
+            _verts.Add(p2);
+            _verts.Add(p3);
 
-            float d_ab = Vector3.Dot(a, b);
-            float d_bc = Vector3.Dot(b, c);
-
-            if(1 - TOLERANCE < d_ab && 1 - TOLERANCE < d_bc)
-            //suc = (1 - TOLERANCE < d_ab) && (1 - TOLERANCE < d_bc);
-            //if (!suc)
+            if(!Math.PointInTriangle(p, p1, p2, p3))
             {
                 continue;
             }
@@ -102,6 +89,8 @@ public class UVTest : MonoBehaviour
             #endregion 3. 点PのUV座標を求める
 
             Debug.Log(uv + " : " + hit.textureCoord);
+
+            _lastHit = p;
 
             return;
         }
@@ -210,7 +199,18 @@ public class UVTest : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (_lastHit == null)
+        {
+            return;
+        }
+
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(_lastHit, 0.01f);
+        Gizmos.DrawWireSphere(_lastHit.Value, 0.01f);
+
+        Gizmos.color = Color.cyan;
+        for (int i = 0; i < _verts.Count; i++)
+        {
+            Gizmos.DrawWireSphere(_verts[i], 0.005f);
+        }
     }
 }
