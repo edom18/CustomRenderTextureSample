@@ -4,27 +4,82 @@ using UnityEngine;
 
 public class UVTest : MonoBehaviour
 {
+    [SerializeField]
+    private Transform _testPoint;
+
+    [SerializeField]
+    private Transform _testTarget;
+
     private Vector3? _lastHit = null;
     private List<Vector3> _verts = new List<Vector3>();
 
-    private void CheckUV()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
+    private Vector3[] _triangle = new Vector3[3];
+    private Vector3 _n;
+    private Vector3 _delta;
 
-        if (!Physics.Raycast(ray, out hit))
+    private void GetNearestTriangle(Mesh mesh, Vector3 p, out Vector3[] verts, out Vector2[] uvs)
+    {
+        verts = new Vector3[3];
+        uvs = new Vector2[3];
+
+        for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
+            int idx0 = i + 0;
+            int idx1 = i + 1;
+            int idx2 = i + 2;
+
+            Vector3 p0 = mesh.vertices[mesh.triangles[idx0]];
+            Vector3 p1 = mesh.vertices[mesh.triangles[idx1]];
+            Vector3 p2 = mesh.vertices[mesh.triangles[idx2]];
+
+            Vector3 e0 = (p1 - p0);
+            Vector3 e1 = (p2 - p0);
+            Vector3 n = Vector3.Cross(e0, e1).normalized;
+
+            float dist = Vector3.Dot((p - p0), n);
+
+            _n = n;
+            _delta = (n * dist);
+
+            _triangle[0] = p0;
+            _triangle[1] = p1;
+            _triangle[2] = p2;
+
+            verts[0] = p0;
+            verts[1] = p1;
+            verts[2] = p2;
+
+            uvs[0] = mesh.uv[mesh.triangles[idx0]];
+            uvs[1] = mesh.uv[mesh.triangles[idx1]];
+            uvs[2] = mesh.uv[mesh.triangles[idx2]];
+
             return;
         }
+    }
+
+    private void CheckUV()
+    {
+        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //RaycastHit hit;
+
+        //if (!Physics.Raycast(ray, out hit))
+        //{
+        //    return;
+        //}
 
         _verts.Clear();
         _lastHit = null;
 
-        Vector3 p = hit.transform.InverseTransformPoint(hit.point);
+        //Vector3 p = hit.transform.InverseTransformPoint(hit.point);
+        Vector3 p = _testTarget.InverseTransformPoint(_testPoint.position);
         _lastHit = p;
 
-        MeshFilter filter = hit.transform.GetComponent<MeshFilter>();
+        MeshFilter filter = _testTarget.transform.GetComponent<MeshFilter>();
         Mesh mesh = filter.sharedMesh;
+
+        Vector3[] verts;
+        Vector2[] uvs;
+        GetNearestTriangle(mesh, p, out verts, out uvs);
 
         for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
@@ -60,7 +115,7 @@ public class UVTest : MonoBehaviour
             Vector2 uv3 = mesh.uv[mesh.triangles[idx2]];
 
             // PerspectiveCollect（投資射影を考慮したUV補間）
-            Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * hit.transform.localToWorldMatrix;
+            Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * _testTarget.transform.localToWorldMatrix;
 
             // 各点をProjectionSpaceへ変換
             Vector4 p1_p = mvp * p1;
@@ -88,7 +143,7 @@ public class UVTest : MonoBehaviour
             Vector2 uv = (((1f - u - v) * uv1 / p1_p.w) + (u * uv2 / p2_p.w) + (v * uv3 / p3_p.w)) * invW;
             #endregion 3. 点PのUV座標を求める
 
-            Debug.Log(uv + " : " + hit.textureCoord);
+            //Debug.Log(uv + " : " + hit.textureCoord);
 
             _lastHit = p;
 
@@ -212,5 +267,14 @@ public class UVTest : MonoBehaviour
         {
             Gizmos.DrawWireSphere(_verts[i], 0.005f);
         }
+
+        Gizmos.color = Color.green;
+        for (int i = 0; i < _triangle.Length; i++)
+        {
+            Gizmos.DrawLine(_triangle[i], _triangle[i] + _n * 0.1f);
+        }
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(_testPoint.position, _testPoint.position - _delta);
     }
 }
