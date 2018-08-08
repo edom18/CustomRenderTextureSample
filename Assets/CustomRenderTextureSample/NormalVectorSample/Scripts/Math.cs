@@ -35,4 +35,71 @@ public class Math
 
         return bdab && bdbc;
     }
+
+    static public Vector3[] GetNearestPointsInMesh(Mesh mesh, Vector3 p)
+    {
+        List<Vector3> nearestPoints = new List<Vector3>();
+
+        float sqrMinDist = float.MaxValue;
+        int nearestIndex = -1;
+
+        for (int i = 0; i < mesh.triangles.Length; i++)
+        {
+            int idx = mesh.triangles[i];
+
+            Vector3 p0 = mesh.vertices[idx];
+            Vector3 delta = p0 - p;
+
+            float sqrd = delta.sqrMagnitude;
+            if (sqrd >= sqrMinDist)
+            {
+                continue;
+            }
+
+            sqrMinDist = sqrd;
+
+            nearestIndex = idx;
+        }
+
+        for (int i = 0; i < mesh.triangles.Length; i++)
+        {
+            if (mesh.triangles[i] != nearestIndex)
+            {
+                continue;
+            }
+
+            int m = i % 3;
+
+            int idx0 = 0;
+            int idx1 = 0;
+            int idx2 = 0;
+
+            switch (m)
+            {
+                case 0:
+                    idx0 = i + 0;
+                    idx1 = i + 1;
+                    idx2 = i + 2;
+                    break;
+
+                case 1:
+                    idx0 = i - 1;
+                    idx1 = i + 0;
+                    idx2 = i + 1;
+                    break;
+
+                case 2:
+                    idx0 = i - 2;
+                    idx1 = i - 1;
+                    idx2 = i + 0;
+                    break;
+            }
+
+            nearestPoints.Add(mesh.vertices[mesh.triangles[idx0]]);
+            nearestPoints.Add(mesh.vertices[mesh.triangles[idx1]]);
+            nearestPoints.Add(mesh.vertices[mesh.triangles[idx2]]);
+        }
+
+        return nearestPoints.ToArray();
+    }
 }
