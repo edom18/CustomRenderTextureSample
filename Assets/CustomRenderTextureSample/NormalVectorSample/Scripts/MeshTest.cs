@@ -10,8 +10,28 @@ public class MeshTest : MonoBehaviour
     [SerializeField]
     private Material _material;
 
+    private GameObject _obj;
+
     private void Start()
     {
+        Initialize();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Initialize();
+        }
+    }
+
+    private void Initialize()
+    {
+        if (_obj != null)
+        {
+            Destroy(_obj);
+        }
+
         Mesh mesh = new Mesh();
         List<Vector3> verts = new List<Vector3>();
         verts.Add(_points[0].position); 
@@ -27,13 +47,13 @@ public class MeshTest : MonoBehaviour
         uvs.Add(new Vector2(0, 1));
         mesh.SetUVs(0, uvs);
 
-        GameObject obj = new GameObject("TestMesh", typeof(MeshFilter), typeof(MeshRenderer));
-        MeshFilter filter = obj.GetComponent<MeshFilter>();
+        _obj = new GameObject("TestMesh", typeof(MeshFilter), typeof(MeshRenderer));
+        MeshFilter filter = _obj.GetComponent<MeshFilter>();
         filter.sharedMesh = mesh;
 
-        MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
+        MeshRenderer renderer = _obj.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = _material;
 
-        obj.AddComponent<MeshCollider>();
+        _obj.AddComponent<MeshCollider>();
     }
 }
