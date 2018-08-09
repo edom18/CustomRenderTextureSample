@@ -15,8 +15,9 @@ public class UVTest : MonoBehaviour
 
     private Vector3[] _triangle = new Vector3[3];
     private Vector3 _n;
+    private Vector3 _u;
+    private Vector3 _v;
     private Vector3 _delta;
-    private bool _hasDone = false;
 
     private void CheckUV()
     {
@@ -30,7 +31,6 @@ public class UVTest : MonoBehaviour
 
         _verts.Clear();
         _lastHit = null;
-        _hasDone = false;
 
         //Vector3 p = _testTarget.InverseTransformPoint(_testPoint.position);
         //MeshFilter filter = _testTarget.transform.GetComponent<MeshFilter>();
@@ -62,17 +62,17 @@ public class UVTest : MonoBehaviour
             Plane plane = new Plane(p0, p1, p2);
             Vector3 projected = plane.ClosestPointOnPlane(p);
 
-            _triangle[0] = p0;
-            _triangle[1] = p1;
-            _triangle[2] = p2;
-            _n = plane.normal;
-            _lastHit = projected;
-
             if (!Math.PointInTriangle(projected, p0, p1, p2))
             {
                 continue;
             }
             #endregion 1. 同一平面上に存在する点Pが三角形内部に存在するか
+
+            _triangle[0] = p0;
+            _triangle[1] = p1;
+            _triangle[2] = p2;
+            _n = plane.normal;
+            _lastHit = projected;
 
             #region 3. 点PのUV座標を求める
             Vector2 uv0 = nearsetUVs[idx0];
@@ -84,9 +84,55 @@ public class UVTest : MonoBehaviour
             Vector2 uv = Math.GetPerspectiveCollectedUV(uv0, uv1, uv2, p, p0, p1, p2, mvp);
             #endregion 3. 点PのUV座標を求める
 
-            Debug.Log(uv + " : " + hit.textureCoord);
+            #region ### 接ベクトルを計算 ###
+            Vector3[] cp0 = new[]
+            {
+                new Vector3(p0.x, uv0.x, uv0.y),
+                new Vector3(p0.y, uv0.x, uv0.y),
+                new Vector3(p0.z, uv0.x, uv0.y),
+            };
 
-            _hasDone = true;
+            Vector3[] cp1 = new[]
+            {
+                new Vector3(p1.x, uv1.x, uv1.y),
+                new Vector3(p1.y, uv1.x, uv1.y),
+                new Vector3(p1.z, uv1.x, uv1.y),
+            };
+
+            Vector3[] cp2 = new[]
+            {
+                new Vector3(p2.x, uv2.x, uv2.y),
+                new Vector3(p2.y, uv2.x, uv2.y),
+                new Vector3(p2.z, uv2.x, uv2.y),
+            };
+
+            Vector3 u = Vector3.zero;
+            Vector3 v = Vector3.zero;
+
+            for (int j = 0; j < 3; j++)
+            {
+                Vector3 v1 = cp1[j] - cp0[j];
+                Vector3 v2 = cp2[j] - cp0[j];
+                Vector3 ABC = Vector3.Cross(v1, v2).normalized;
+
+                if (ABC.x == 0)
+                {
+                    Debug.LogWarning("ポリゴンかUV上のポリゴンが縮退しています");
+                    return;
+                }
+
+                u[j] = -(ABC.y / ABC.x);
+                v[j] = -(ABC.z / ABC.x);
+            }
+
+            u.Normalize();
+            v.Normalize();
+
+            _u = u;
+            _v = v;
+            #endregion ### 接ベクトルを計算 ###
+
+            Debug.Log(uv + " : " + hit.textureCoord);
 
             return;
         }
@@ -110,7 +156,7 @@ public class UVTest : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(_lastHit.Value, 0.01f);
 
-        Gizmos.color = _hasDone ? Color.blue : Color.cyan;
+        Gizmos.color = Color.cyan;
         for (int i = 0; i < _verts.Count; i++)
         {
             Gizmos.DrawWireSphere(_verts[i], 0.005f);
@@ -119,10 +165,18 @@ public class UVTest : MonoBehaviour
         Gizmos.color = Color.green;
         for (int i = 0; i < _triangle.Length; i++)
         {
-            Gizmos.DrawLine(_triangle[i], _triangle[i] + _n * 0.1f);
+            Gizmos.DrawLine(_triangle[i], _triangle[i] + _n * 0.05f);
         }
 
+        Vector3 g = (_triangle[0] + _triangle[1] + _triangle[2]) / 3f;
+
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(_testPoint.position, _testPoint.position - _delta);
+        Gizmos.DrawLine(g, g + _n * 0.1f);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(g, g + _v * 0.1f);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(g, g + _u * 0.1f);
     }
 }
