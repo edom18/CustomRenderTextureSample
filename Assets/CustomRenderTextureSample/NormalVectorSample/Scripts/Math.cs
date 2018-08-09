@@ -157,4 +157,52 @@ public class Math
 
         return uv;
     }
+
+    static public Vector3[] GetTangentSpaceVectors(Vector3[] p, Vector2[] uv)
+    {
+        Vector3[] cp0 = new[]
+        {
+                new Vector3(p[0].x, uv[0].x, uv[0].y),
+                new Vector3(p[0].y, uv[0].x, uv[0].y),
+                new Vector3(p[0].z, uv[0].x, uv[0].y),
+            };
+
+        Vector3[] cp1 = new[]
+        {
+                new Vector3(p[1].x, uv[1].x, uv[1].y),
+                new Vector3(p[1].y, uv[1].x, uv[1].y),
+                new Vector3(p[1].z, uv[1].x, uv[1].y),
+            };
+
+        Vector3[] cp2 = new[]
+        {
+                new Vector3(p[2].x, uv[2].x, uv[2].y),
+                new Vector3(p[2].y, uv[2].x, uv[2].y),
+                new Vector3(p[2].z, uv[2].x, uv[2].y),
+            };
+
+        Vector3 u = Vector3.zero;
+        Vector3 v = Vector3.zero;
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 v1 = cp1[i] - cp0[i];
+            Vector3 v2 = cp2[i] - cp0[i];
+            Vector3 ABC = Vector3.Cross(v1, v2).normalized;
+
+            if (ABC.x == 0)
+            {
+                Debug.LogWarning("ポリゴンかUV上のポリゴンが縮退しています");
+                return new[] { Vector3.zero, Vector3.zero };
+            }
+
+            u[i] = -(ABC.y / ABC.x);
+            v[i] = -(ABC.z / ABC.x);
+        }
+
+        u.Normalize();
+        v.Normalize();
+
+        return new[] { u, v };
+    }
 }

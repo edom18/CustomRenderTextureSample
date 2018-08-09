@@ -85,51 +85,10 @@ public class UVTest : MonoBehaviour
             #endregion 3. 点PのUV座標を求める
 
             #region ### 接ベクトルを計算 ###
-            Vector3[] cp0 = new[]
-            {
-                new Vector3(p0.x, uv0.x, uv0.y),
-                new Vector3(p0.y, uv0.x, uv0.y),
-                new Vector3(p0.z, uv0.x, uv0.y),
-            };
+            Vector3[] uvvector = Math.GetTangentSpaceVectors(new[] { p0, p1, p2 }, new[] { uv0, uv1, uv2 });
 
-            Vector3[] cp1 = new[]
-            {
-                new Vector3(p1.x, uv1.x, uv1.y),
-                new Vector3(p1.y, uv1.x, uv1.y),
-                new Vector3(p1.z, uv1.x, uv1.y),
-            };
-
-            Vector3[] cp2 = new[]
-            {
-                new Vector3(p2.x, uv2.x, uv2.y),
-                new Vector3(p2.y, uv2.x, uv2.y),
-                new Vector3(p2.z, uv2.x, uv2.y),
-            };
-
-            Vector3 u = Vector3.zero;
-            Vector3 v = Vector3.zero;
-
-            for (int j = 0; j < 3; j++)
-            {
-                Vector3 v1 = cp1[j] - cp0[j];
-                Vector3 v2 = cp2[j] - cp0[j];
-                Vector3 ABC = Vector3.Cross(v1, v2).normalized;
-
-                if (ABC.x == 0)
-                {
-                    Debug.LogWarning("ポリゴンかUV上のポリゴンが縮退しています");
-                    return;
-                }
-
-                u[j] = -(ABC.y / ABC.x);
-                v[j] = -(ABC.z / ABC.x);
-            }
-
-            u.Normalize();
-            v.Normalize();
-
-            _u = u;
-            _v = v;
+            _u = uvvector[0];
+            _v = uvvector[1];
             #endregion ### 接ベクトルを計算 ###
 
             Debug.Log(uv + " : " + hit.textureCoord);
