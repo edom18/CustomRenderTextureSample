@@ -130,15 +130,15 @@ public class UVTest : MonoBehaviour
             Gizmos.DrawLine(_triangle[i], _triangle[i] + _n * 0.05f);
         }
 
-        Vector3 g = (_triangle[0] + _triangle[1] + _triangle[2]) / 3f;
+        Vector3 h = _lastHit.Value;
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(g, g + _n * 0.1f);
+        Gizmos.DrawLine(h, h + _n * 0.1f);
 
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(g, g + _v * 0.1f);
+        Gizmos.DrawLine(h, h + _v * 0.1f);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(g, g + _u * 0.1f);
+        Gizmos.DrawLine(h, h + _u * 0.1f);
     }
 }
