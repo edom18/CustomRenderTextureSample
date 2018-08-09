@@ -121,19 +121,12 @@ public class Math
         nearestUVs = nearestUVList.ToArray();
     }
 
-    static public Vector2 GetPerspectiveCollectedUV(Vector2 uv0, Vector2 uv1, Vector2 uv2, Vector3 p, Vector3 p0, Vector3 p1, Vector3 p2, Matrix4x4 mvp)
+    static public Vector2 GetPerspectiveCollectedUV(Vector2[] uvs, Vector3 p, Vector3[] points, Matrix4x4 mvp)
     {
-        //Vector2 uv1 = nearsetUVs[idx0];
-        //Vector2 uv2 = nearsetUVs[idx1];
-        //Vector2 uv3 = nearsetUVs[idx2];
-
-        // PerspectiveCollect（投資射影を考慮したUV補間）
-        //Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * hit.transform.localToWorldMatrix;
-
         // 各点をProjectionSpaceへ変換
-        Vector4 p1_p = mvp * p0;
-        Vector4 p2_p = mvp * p1;
-        Vector4 p3_p = mvp * p2;
+        Vector4 p1_p = mvp * points[0];
+        Vector4 p2_p = mvp * points[1];
+        Vector4 p3_p = mvp * points[2];
         Vector4 p_p = mvp * p;
 
         // 通常座標（同次座標）への変換（w除算）
@@ -153,7 +146,7 @@ public class Math
         float w = ((1f - u - v) * 1f / p1_p.w) + (u * 1f / p2_p.w) + (v * 1f / p3_p.w);
         float invW = 1f / w;
 
-        Vector2 uv = (((1f - u - v) * uv0 / p1_p.w) + (u * uv1 / p2_p.w) + (v * uv2 / p3_p.w)) * invW;
+        Vector2 uv = (((1f - u - v) * uvs[0] / p1_p.w) + (u * uvs[1] / p2_p.w) + (v * uvs[2] / p3_p.w)) * invW;
 
         return uv;
     }

@@ -81,11 +81,14 @@ public class UVTest : MonoBehaviour
 
             Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * hit.transform.localToWorldMatrix;
 
-            Vector2 uv = Math.GetPerspectiveCollectedUV(uv0, uv1, uv2, p, p0, p1, p2, mvp);
+            Vector3[] points = new[] { p0, p1, p2 };
+            Vector2[] uvs = new[] { uv0, uv1, uv2 };
+
+            Vector2 uv = Math.GetPerspectiveCollectedUV(uvs, p, points, mvp);
             #endregion 3. 点PのUV座標を求める
 
             #region ### 接ベクトルを計算 ###
-            Vector3[] uvvector = Math.GetTangentSpaceVectors(new[] { p0, p1, p2 }, new[] { uv0, uv1, uv2 });
+            Vector3[] uvvector = Math.GetTangentSpaceVectors(points, uvs);
 
             _u = uvvector[0];
             _v = uvvector[1];
