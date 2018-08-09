@@ -75,38 +75,14 @@ public class UVTest : MonoBehaviour
             #endregion 1. 同一平面上に存在する点Pが三角形内部に存在するか
 
             #region 3. 点PのUV座標を求める
-            Vector2 uv1 = nearsetUVs[idx0];
-            Vector2 uv2 = nearsetUVs[idx1];
-            Vector2 uv3 = nearsetUVs[idx2];
+            Vector2 uv0 = nearsetUVs[idx0];
+            Vector2 uv1 = nearsetUVs[idx1];
+            Vector2 uv2 = nearsetUVs[idx2];
 
-            // PerspectiveCollect（投資射影を考慮したUV補間）
-            Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * _testTarget.transform.localToWorldMatrix;
+            Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * hit.transform.localToWorldMatrix;
 
-            // 各点をProjectionSpaceへ変換
-            Vector4 p1_p = mvp * p0;
-            Vector4 p2_p = mvp * p1;
-            Vector4 p3_p = mvp * p2;
-            Vector4 p_p = mvp * p;
-
-            // 通常座標（同次座標）への変換（w除算）
-            Vector2 p1_n = new Vector2(p1_p.x, p1_p.y) / p1_p.w;
-            Vector2 p2_n = new Vector2(p2_p.x, p2_p.y) / p2_p.w;
-            Vector2 p3_n = new Vector2(p3_p.x, p3_p.y) / p3_p.w;
-            Vector2 p_n = new Vector2(p_p.x, p_p.y) / p_p.w;
-
-            // 頂点のなす三角形を点Pにより分割し、必要になる面積を計算
-            float s = 0.5f * ((p2_n.x - p1_n.x) * (p3_n.y - p1_n.y) - (p2_n.y - p1_n.y) * (p3_n.x - p1_n.x));
-            float s1 = 0.5f * ((p3_n.x - p_n.x) * (p1_n.y - p_n.y) - (p3_n.y - p_n.y) * (p1_n.x - p_n.x));
-            float s2 = 0.5f * ((p1_n.x - p_n.x) * (p2_n.y - p_n.y) - (p1_n.y - p_n.y) * (p2_n.x - p_n.x));
-
-            // 面積比からUVを補間
-            float u = s1 / s;
-            float v = s2 / s;
-            float w = ((1f - u - v) * 1f / p1_p.w) + (u * 1f / p2_p.w) + (v * 1f / p3_p.w);
-            float invW = 1f / w;
-
-            Vector2 uv = (((1f - u - v) * uv1 / p1_p.w) + (u * uv2 / p2_p.w) + (v * uv3 / p3_p.w)) * invW;
-            #endregion 2. 点PのUV座標を求める
+            Vector2 uv = Math.GetPerspectiveCollectedUV(uv0, uv1, uv2, p, p0, p1, p2, mvp);
+            #endregion 3. 点PのUV座標を求める
 
             Debug.Log(uv + " : " + hit.textureCoord);
 
