@@ -36,19 +36,28 @@ public class Math
         return bdab && bdbc;
     }
 
-    static public Vector3[] GetNearestPointsInMesh(Mesh mesh, Vector3 p)
+    /// <summary>
+    /// メッシュの頂点郡から、与えられた点に一番近い頂点を探す
+    /// </summary>
+    /// <param name="mesh">対象メッシュ</param>
+    /// <param name="point">調べる点</param>
+    /// <param name="nearestPoints">一番近い点が含まれるポリゴンの頂点リスト</param>
+    /// <param name="nearestUVs">一番近い点が含まれるポリゴンのUVリスト</param>
+    static public void GetNearestPointsInMesh(Mesh mesh, Vector3 point, out Vector3[] nearestPoints, out Vector2[] nearestUVs)
     {
-        List<Vector3> nearestPoints = new List<Vector3>();
+        List<Vector3> nearestPointsList = new List<Vector3>();
+        List<Vector2> nearestUVList = new List<Vector2>();
 
         float sqrMinDist = float.MaxValue;
         int nearestIndex = -1;
 
+        #region ### 一番近い頂点を探す ###
         for (int i = 0; i < mesh.triangles.Length; i++)
         {
             int idx = mesh.triangles[i];
 
             Vector3 p0 = mesh.vertices[idx];
-            Vector3 delta = p0 - p;
+            Vector3 delta = p0 - point;
 
             float sqrd = delta.sqrMagnitude;
             if (sqrd >= sqrMinDist)
@@ -60,7 +69,9 @@ public class Math
 
             nearestIndex = idx;
         }
+        #endregion ### 一番近い頂点を探す ###
 
+        #region ### 見つかった一番近い頂点のindexからポリゴン頂点のリストを生成する ###
         for (int i = 0; i < mesh.triangles.Length; i++)
         {
             if (mesh.triangles[i] != nearestIndex)
@@ -95,11 +106,18 @@ public class Math
                     break;
             }
 
-            nearestPoints.Add(mesh.vertices[mesh.triangles[idx0]]);
-            nearestPoints.Add(mesh.vertices[mesh.triangles[idx1]]);
-            nearestPoints.Add(mesh.vertices[mesh.triangles[idx2]]);
-        }
+            nearestPointsList.Add(mesh.vertices[mesh.triangles[idx0]]);
+            nearestPointsList.Add(mesh.vertices[mesh.triangles[idx1]]);
+            nearestPointsList.Add(mesh.vertices[mesh.triangles[idx2]]);
 
-        return nearestPoints.ToArray();
+            nearestUVList.Add(mesh.uv[mesh.triangles[idx0]]);
+            nearestUVList.Add(mesh.uv[mesh.triangles[idx1]]);
+            nearestUVList.Add(mesh.uv[mesh.triangles[idx2]]);
+        }
+        #endregion ### 見つかった一番近い頂点のindexからポリゴン頂点のリストを生成する ###
+
+        // Variables out.
+        nearestPoints = nearestPointsList.ToArray();
+        nearestUVs = nearestUVList.ToArray();
     }
 }

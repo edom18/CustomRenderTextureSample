@@ -18,15 +18,14 @@ public class UVTest : MonoBehaviour
     private Vector3 _delta;
     private bool _hasDone = false;
 
-    private IEnumerator CheckUV()
+    private void CheckUV()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
         if (!Physics.Raycast(ray, out hit))
         {
-            //return;
-            yield break;
+            return;
         }
 
         _verts.Clear();
@@ -43,7 +42,10 @@ public class UVTest : MonoBehaviour
 
         _lastHit = p;
 
-        Vector3[] nearestPoints = Math.GetNearestPointsInMesh(mesh, p);
+        Vector3[] nearestPoints;
+        Vector2[] nearsetUVs;
+        Math.GetNearestPointsInMesh(mesh, p, out nearestPoints, out nearsetUVs);
+
         _verts.AddRange(nearestPoints);
 
         for (int i = 0; i < nearestPoints.Length; i += 3)
@@ -68,15 +70,14 @@ public class UVTest : MonoBehaviour
 
             if (!Math.PointInTriangle(projected, p0, p1, p2))
             {
-                yield return new WaitForSeconds(1f);
                 continue;
             }
             #endregion 1. 同一平面上に存在する点Pが三角形内部に存在するか
 
             #region 3. 点PのUV座標を求める
-            Vector2 uv1 = mesh.uv[mesh.triangles[idx0]];
-            Vector2 uv2 = mesh.uv[mesh.triangles[idx1]];
-            Vector2 uv3 = mesh.uv[mesh.triangles[idx2]];
+            Vector2 uv1 = nearsetUVs[idx0];
+            Vector2 uv2 = nearsetUVs[idx1];
+            Vector2 uv3 = nearsetUVs[idx2];
 
             // PerspectiveCollect（投資射影を考慮したUV補間）
             Matrix4x4 mvp = Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * _testTarget.transform.localToWorldMatrix;
@@ -111,8 +112,7 @@ public class UVTest : MonoBehaviour
 
             _hasDone = true;
 
-            //return;
-            yield break;
+            return;
         }
     }
 
@@ -120,8 +120,7 @@ public class UVTest : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            StartCoroutine(CheckUV());
-            //CheckUV2();
+            CheckUV();
         }
     }
 
