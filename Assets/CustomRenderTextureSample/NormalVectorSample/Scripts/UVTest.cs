@@ -16,26 +16,32 @@ public class UVTest : MonoBehaviour
     private Vector3[] _triangle = new Vector3[3];
     private Vector3 _n;
     private Vector3 _delta;
+    private bool _hasDone = false;
 
     private IEnumerator CheckUV()
     {
-        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
 
-        //if (!Physics.Raycast(ray, out hit))
-        //{
-        //    return;
-        //}
+        if (!Physics.Raycast(ray, out hit))
+        {
+            //return;
+            yield break;
+        }
 
         _verts.Clear();
         _lastHit = null;
+        _hasDone = false;
 
-        //Vector3 p = hit.transform.InverseTransformPoint(hit.point);
-        Vector3 p = _testTarget.InverseTransformPoint(_testPoint.position);
-        _lastHit = p;
+        //Vector3 p = _testTarget.InverseTransformPoint(_testPoint.position);
+        //MeshFilter filter = _testTarget.transform.GetComponent<MeshFilter>();
 
-        MeshFilter filter = _testTarget.transform.GetComponent<MeshFilter>();
+        Vector3 p = hit.transform.InverseTransformPoint(hit.point);
+        MeshFilter filter = hit.transform.GetComponent<MeshFilter>();
+
         Mesh mesh = filter.sharedMesh;
+
+        _lastHit = p;
 
         Vector3[] nearestPoints = Math.GetNearestPointsInMesh(mesh, p);
         _verts.AddRange(nearestPoints);
@@ -54,21 +60,18 @@ public class UVTest : MonoBehaviour
             Plane plane = new Plane(p0, p1, p2);
             Vector3 projected = plane.ClosestPointOnPlane(p);
 
-            //if (!Math.PointInTriangle(projected, p0, p1, p2))
-            //{
-            //    continue;
-            //}
-
             _triangle[0] = p0;
             _triangle[1] = p1;
             _triangle[2] = p2;
             _n = plane.normal;
             _lastHit = projected;
+
+            if (!Math.PointInTriangle(projected, p0, p1, p2))
+            {
+                yield return new WaitForSeconds(1f);
+                continue;
+            }
             #endregion 1. 同一平面上に存在する点Pが三角形内部に存在するか
-
-            yield return new WaitForSeconds(1f);
-
-            continue;
 
             #region 3. 点PのUV座標を求める
             Vector2 uv1 = mesh.uv[mesh.triangles[idx0]];
@@ -104,9 +107,12 @@ public class UVTest : MonoBehaviour
             Vector2 uv = (((1f - u - v) * uv1 / p1_p.w) + (u * uv2 / p2_p.w) + (v * uv3 / p3_p.w)) * invW;
             #endregion 2. 点PのUV座標を求める
 
-            //Debug.Log(uv + " : " + hit.textureCoord);
+            Debug.Log(uv + " : " + hit.textureCoord);
+
+            _hasDone = true;
 
             //return;
+            yield break;
         }
     }
 
@@ -129,7 +135,7 @@ public class UVTest : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(_lastHit.Value, 0.01f);
 
-        Gizmos.color = Color.cyan;
+        Gizmos.color = _hasDone ? Color.blue : Color.cyan;
         for (int i = 0; i < _verts.Count; i++)
         {
             Gizmos.DrawWireSphere(_verts[i], 0.005f);
