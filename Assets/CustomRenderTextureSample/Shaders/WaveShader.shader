@@ -42,8 +42,8 @@
                 // |0  1 0|
                 // |1 -4 1|
                 // |0  1 0|
-                float k = (2.0 * c.r) - (c.g + _S2);
-                float p = (k * (
+                float k = (2.0 * c.r) - c.g;
+                float p = (k + _S2 * (
                     tex2D(_SelfTexture2D, uv - duv.zy).r +
                     tex2D(_SelfTexture2D, uv + duv.zy).r +
                     tex2D(_SelfTexture2D, uv - duv.xz).r +
