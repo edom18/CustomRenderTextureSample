@@ -25,5 +25,5 @@ Material:
     m_Floats:
     - _Atten: 0.999
     - _DeltaUV: 1
-    - _S2: 0.05
+    - _S2: 0.1
     m_Colors: []
