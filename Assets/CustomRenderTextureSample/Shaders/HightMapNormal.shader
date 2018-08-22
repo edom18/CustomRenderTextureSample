@@ -7,7 +7,7 @@
         _ParallaxMap("Parallax Map", 2D) = "gray" {}
     }
 
-    SubShader
+        SubShader
     {
         Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
         LOD 100
@@ -20,6 +20,7 @@
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
+            #include "Lighting.cginc"
 
             struct appdata
             {
@@ -32,6 +33,7 @@
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 float4 uvgrab : TEXCOORD1;
+                float3 worldPos : TEXCOORD2;
             };
 
             sampler2D _MainTex;
@@ -46,6 +48,7 @@
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.worldPos = mul(UNITY_MATRIX_MV, v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
 #if UNITY_UV_STARTS_AT_TOP
@@ -77,6 +80,16 @@
                 i.uvgrab.xy += n * i.uvgrab.z;
 
                 fixed4 col = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(i.uvgrab)) * _Color;
+
+                float3 lightDir = normalize(_WorldSpaceLightPos0 - i.worldPos);
+                float diff = max(0, dot(n, lightDir)) + 0.5;
+                col *= diff;
+
+                float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
+                float NdotL = dot(n, lightDir);
+                float3 refDir = -lightDir + (2.0 * n * NdotL);
+                float spec = pow(max(0, dot(viewDir, refDir)), 10.0);
+                col += spec + unity_AmbientSky;
 
                 return col;
             }
