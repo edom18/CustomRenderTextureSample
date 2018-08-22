@@ -72,7 +72,7 @@
                 float3 texZ = tex2D(_ParallaxMap, float4(i.uv.xy + shiftZ, 0, 0)) * 2.0 - 1;
                 float3 texz = tex2D(_ParallaxMap, float4(i.uv.xy - shiftZ, 0, 0)) * 2.0 - 1;
 
-                float3 du = float3(1, 0, (texX.x - texx.x));
+                float3 du = float3(1, (texX.x - texx.x), 0);
                 float3 dv = float3(0, (texZ.x - texz.x), 1);
 
                 float3 n = normalize(cross(dv, du));
